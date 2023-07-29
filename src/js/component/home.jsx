@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BsFillRewindFill } from 'react-icons/bs';
 import { BsFillPlayFill } from 'react-icons/bs';
 import { BsFillFastForwardFill } from 'react-icons/bs';
@@ -12,30 +12,47 @@ const songs = [
 ];
 
 const Home = () => {
-  const input = useRef();
+  const audioRef = useRef(null);
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const changeSrc = (songIndex) => {
-    setCurrentSongIndex(songIndex);
-    playSong();
-  };
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.src = songs[currentSongIndex];
+      audioRef.current.load();
+      if (isPlaying) {
+        audioRef.current.play();
+      }
+    }
+  }, [currentSongIndex, isPlaying]);
 
   const playSong = () => {
-    input.current.play();
+    if (audioRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
   };
 
   const pauseSong = () => {
-    input.current.pause();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
   };
 
   const nextSong = () => {
     const nextIndex = (currentSongIndex + 1) % songs.length;
-    changeSrc(nextIndex);
+    setCurrentSongIndex(nextIndex);
   };
 
   const previousSong = () => {
     const previousIndex = (currentSongIndex - 1 + songs.length) % songs.length;
-    changeSrc(previousIndex);
+    setCurrentSongIndex(previousIndex);
+  };
+
+  const handleSongSelect = (index) => {
+    setCurrentSongIndex(index);
+    setIsPlaying(true);
   };
 
   return (
@@ -45,7 +62,7 @@ const Home = () => {
           <h1 className="text-center mt-5">Mario's Playlist</h1>
           <ul className="list-group">
             {songs.map((song, index) => (
-              <li className="list-group-item" key={index} onClick={() => changeSrc(index)}>
+              <li className="list-group-item" key={index} onClick={() => handleSongSelect(index)}>
                 {index + 1}. song_{index + 1}
               </li>
             ))}
@@ -59,7 +76,7 @@ const Home = () => {
               <button type="button" className="btn_play" onClick={playSong}>
                 <BsFillPlayFill />
               </button>
-              <button type="button" className="btn_play" onClick={pauseSong}>
+              <button type="button" className="btn_pause" onClick={pauseSong}>
                 <BsFillPauseFill />
               </button>
               <button type="button" className="btn_forward" onClick={nextSong}>
@@ -69,7 +86,7 @@ const Home = () => {
           </div>
 
           <div className="list-group-item">
-            <audio src={songs[currentSongIndex]} controls ref={input} />
+            <audio ref={audioRef} controls />
           </div>
         </div>
       </div>
